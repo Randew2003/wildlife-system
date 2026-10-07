@@ -13,6 +13,8 @@ import java.util.UUID;
 
 import java.util.List;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 public class RiskAlertServiceImpl implements RiskAlertService {
 
@@ -56,6 +58,7 @@ public class RiskAlertServiceImpl implements RiskAlertService {
                 ));
     }
 
+    @Transactional
     @Override
     public RiskAlert acceptAlert(String alertId) {
 
@@ -76,6 +79,7 @@ public class RiskAlertServiceImpl implements RiskAlertService {
         return riskAlertRepository.save(alert);
     }
 
+    @Transactional
     @Override
     public RiskAlert startResponse(String alertId) {
 
@@ -96,6 +100,7 @@ public class RiskAlertServiceImpl implements RiskAlertService {
         return riskAlertRepository.save(alert);
     }
 
+    @Transactional
     @Override
     public RiskAlert resolveAlert(String alertId) {
 

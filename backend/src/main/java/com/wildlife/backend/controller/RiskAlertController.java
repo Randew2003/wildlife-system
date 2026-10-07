@@ -1,5 +1,6 @@
 package com.wildlife.backend.controller;
 
+import com.wildlife.backend.dto.RiskAlertResponse;
 import com.wildlife.backend.entity.RiskAlert;
 import com.wildlife.backend.service.interfaces.RiskAlertService;
 import org.springframework.http.ResponseEntity;
@@ -18,45 +19,66 @@ public class RiskAlertController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RiskAlert>> getAllAlerts() {
-        return ResponseEntity.ok(
+    public ResponseEntity<List<RiskAlertResponse>> getAllAlerts() {
+
+        List<RiskAlertResponse> responses =
                 riskAlertService.getAllAlerts()
-        );
+                        .stream()
+                        .map(this::toResponse)
+                        .toList();
+
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{alertId}")
-    public ResponseEntity<RiskAlert> getAlert(
+    public ResponseEntity<RiskAlertResponse> getAlert(
             @PathVariable String alertId) {
 
-        return ResponseEntity.ok(
-                riskAlertService.getAlert(alertId)
-        );
+        RiskAlert alert = riskAlertService.getAlert(alertId);
+
+        return ResponseEntity.ok(toResponse(alert));
     }
 
     @PutMapping("/{alertId}/accept")
-    public ResponseEntity<RiskAlert> acceptAlert(
+    public ResponseEntity<RiskAlertResponse> acceptAlert(
             @PathVariable String alertId) {
 
-        return ResponseEntity.ok(
-                riskAlertService.acceptAlert(alertId)
-        );
+        RiskAlert alert =
+                riskAlertService.acceptAlert(alertId);
+
+        return ResponseEntity.ok(toResponse(alert));
     }
 
     @PutMapping("/{alertId}/respond")
-    public ResponseEntity<RiskAlert> startResponse(
+    public ResponseEntity<RiskAlertResponse> startResponse(
             @PathVariable String alertId) {
 
-        return ResponseEntity.ok(
-                riskAlertService.startResponse(alertId)
-        );
+        RiskAlert alert =
+                riskAlertService.startResponse(alertId);
+
+        return ResponseEntity.ok(toResponse(alert));
     }
 
     @PutMapping("/{alertId}/resolve")
-    public ResponseEntity<RiskAlert> resolveAlert(
+    public ResponseEntity<RiskAlertResponse> resolveAlert(
             @PathVariable String alertId) {
 
-        return ResponseEntity.ok(
-                riskAlertService.resolveAlert(alertId)
+        RiskAlert alert =
+                riskAlertService.resolveAlert(alertId);
+
+        return ResponseEntity.ok(toResponse(alert));
+    }
+
+    private RiskAlertResponse toResponse(RiskAlert alert) {
+
+        return new RiskAlertResponse(
+                alert.getAlertId(),
+                alert.getAnimal().getAnimalId(),
+                alert.getAnimal().getName(),
+                alert.getLocation().getId(),
+                alert.getRiskZone().getId(),
+                alert.getStatus(),
+                alert.getDetectedAt()
         );
     }
 }
