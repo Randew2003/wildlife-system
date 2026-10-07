@@ -38,4 +38,65 @@ public class RiskAlertServiceImpl implements RiskAlertService {
 
         return riskAlertRepository.save(alert);
     }
+
+    @Override
+    public RiskAlert acceptAlert(String alertId) {
+
+        RiskAlert alert = riskAlertRepository.findByAlertId(alertId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Alert not found: " + alertId
+                        ));
+
+        if (alert.getStatus() != AlertStatus.DETECTED) {
+            throw new IllegalStateException(
+                    "Only detected alerts can be accepted."
+            );
+        }
+
+        alert.setStatus(AlertStatus.ACCEPTED);
+
+        return riskAlertRepository.save(alert);
+    }
+
+    @Override
+    public RiskAlert startResponse(String alertId) {
+
+        RiskAlert alert = riskAlertRepository.findByAlertId(alertId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Alert not found: " + alertId
+                        ));
+
+        if (alert.getStatus() != AlertStatus.ACCEPTED) {
+            throw new IllegalStateException(
+                    "Only accepted alerts can start a response."
+            );
+        }
+
+        alert.setStatus(AlertStatus.RESPONDING);
+
+        return riskAlertRepository.save(alert);
+    }
+
+    @Override
+    public RiskAlert resolveAlert(String alertId) {
+
+        RiskAlert alert = riskAlertRepository.findByAlertId(alertId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Alert not found: " + alertId
+                        ));
+
+        if (alert.getStatus() != AlertStatus.RESPONDING) {
+            throw new IllegalStateException(
+                    "Only responding alerts can be resolved."
+            );
+        }
+
+        alert.setStatus(AlertStatus.RESOLVED);
+
+        return riskAlertRepository.save(alert);
+    }
+
 }

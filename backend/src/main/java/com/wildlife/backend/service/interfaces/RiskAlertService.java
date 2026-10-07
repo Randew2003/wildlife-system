@@ -10,4 +10,10 @@ public interface RiskAlertService {
             GPSLocation location,
             RiskZone riskZone
     );
+
+    RiskAlert acceptAlert(String alertId);
+
+    RiskAlert startResponse(String alertId);
+
+    RiskAlert resolveAlert(String alertId);
 }
