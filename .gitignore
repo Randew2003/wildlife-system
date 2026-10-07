@@ -24,4 +24,4 @@ hs_err_pid*
 replay_pid*
 
 
-backend/src/main/resources/application.properties
+backend/src/main/resources/application-local.properties
