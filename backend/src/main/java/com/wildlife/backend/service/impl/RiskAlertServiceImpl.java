@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import java.util.List;
+
 @Service
 public class RiskAlertServiceImpl implements RiskAlertService {
 
@@ -37,6 +39,21 @@ public class RiskAlertServiceImpl implements RiskAlertService {
         );
 
         return riskAlertRepository.save(alert);
+    }
+
+    @Override
+    public List<RiskAlert> getAllAlerts() {
+        return riskAlertRepository.findAll();
+   }
+
+    @Override
+    public RiskAlert getAlert(String alertId) {
+
+        return riskAlertRepository.findByAlertId(alertId)
+            .orElseThrow(() ->
+                    new IllegalArgumentException(
+                            "Alert not found: " + alertId
+                ));
     }
 
     @Override
