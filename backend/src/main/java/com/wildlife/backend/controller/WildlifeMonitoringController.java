@@ -1,6 +1,6 @@
 package com.wildlife.backend.controller;
 
-import com.wildlife.backend.dto.GPSLocationRequest;
+import com.wildlife.backend.dto.request.GPSLocationRequest;
 import com.wildlife.backend.entity.GPSLocation;
 import com.wildlife.backend.service.interfaces.GPSLocationService;
 import org.springframework.http.ResponseEntity;

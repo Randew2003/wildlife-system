@@ -1,4 +1,4 @@
-package com.wildlife.backend.dto;
+package com.wildlife.backend.dto.response;
 
 import com.wildlife.backend.entity.AlertStatus;
 

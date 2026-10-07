@@ -1,4 +1,4 @@
-package com.wildlife.backend.dto;
+package com.wildlife.backend.dto.request;
 
 import java.time.LocalDateTime;
 
