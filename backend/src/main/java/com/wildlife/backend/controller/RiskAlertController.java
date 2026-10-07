@@ -1,6 +1,6 @@
 package com.wildlife.backend.controller;
 
-import com.wildlife.backend.dto.RiskAlertResponse;
+import com.wildlife.backend.dto.response.RiskAlertResponse;
 import com.wildlife.backend.entity.RiskAlert;
 import com.wildlife.backend.service.interfaces.RiskAlertService;
 import org.springframework.http.ResponseEntity;
