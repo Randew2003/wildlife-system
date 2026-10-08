@@ -2,7 +2,6 @@ package com.wildlife.backend.controller;
 
 import com.wildlife.backend.dto.request.AddWaypointRequest;
 import com.wildlife.backend.dto.request.RecordLocationRequest;
-import com.wildlife.backend.dto.request.StartPatrolRequest;
 import com.wildlife.backend.dto.response.PatrolLocationResponse;
 import com.wildlife.backend.dto.response.PatrolResponse;
 import com.wildlife.backend.dto.response.WaypointResponse;
@@ -62,8 +61,7 @@ public class PatrolController {
 
     @PostMapping("/{patrolReference}/start")
     public ResponseEntity<PatrolResponse> startPatrol(
-            @PathVariable String patrolReference,
-            @Valid @RequestBody StartPatrolRequest request) {
+            @PathVariable String patrolReference) {
 
         PatrolResponse response = PatrolResponse.fromEntity(
                 patrolService.startPatrol(patrolReference)
