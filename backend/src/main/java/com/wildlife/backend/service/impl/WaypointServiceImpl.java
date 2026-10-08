@@ -8,6 +8,7 @@ import com.wildlife.backend.exception.PatrolNotFoundException;
 import com.wildlife.backend.repository.PatrolRepository;
 import com.wildlife.backend.repository.WaypointRepository;
 import com.wildlife.backend.service.interfaces.WaypointService;
+import com.wildlife.backend.util.CoordinateValidator;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -37,7 +38,7 @@ public class WaypointServiceImpl implements WaypointService {
         Patrol patrol = findPatrol(patrolReference);
 
         validateActivePatrol(patrol);
-        validateCoordinates(latitude, longitude);
+        CoordinateValidator.validate(latitude, longitude);
 
         Waypoint waypoint = new Waypoint(
                 latitude,
@@ -73,23 +74,6 @@ public class WaypointServiceImpl implements WaypointService {
         if (patrol.getStatus() != PatrolStatus.IN_PROGRESS) {
             throw new InvalidPatrolStateException(
                     "A waypoint can only be added to an active patrol."
-            );
-        }
-    }
-
-    private void validateCoordinates(
-            double latitude,
-            double longitude) {
-
-        if (latitude < -90 || latitude > 90) {
-            throw new IllegalArgumentException(
-                    "Latitude must be between -90 and 90."
-            );
-        }
-
-        if (longitude < -180 || longitude > 180) {
-            throw new IllegalArgumentException(
-                    "Longitude must be between -180 and 180."
             );
         }
     }
