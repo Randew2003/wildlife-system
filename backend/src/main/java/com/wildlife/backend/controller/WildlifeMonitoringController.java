@@ -1,5 +1,6 @@
 package com.wildlife.backend.controller;
 
+import jakarta.validation.Valid;
 import com.wildlife.backend.dto.request.GPSLocationRequest;
 import com.wildlife.backend.entity.GPSLocation;
 import com.wildlife.backend.service.interfaces.GPSLocationService;
@@ -21,7 +22,7 @@ public class WildlifeMonitoringController {
     @PostMapping("/{animalId}/location")
     public ResponseEntity<GPSLocation> receiveLocation(
             @PathVariable String animalId,
-            @RequestBody GPSLocationRequest request) {
+            @RequestBody @Valid GPSLocationRequest request) {
 
         GPSLocation location =
                 gpsLocationService.processLocation(
