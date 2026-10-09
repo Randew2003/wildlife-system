@@ -22,13 +22,15 @@ public class PatrolServiceImpl implements PatrolService {
 
     @Override
     public List<Patrol> getAssignedPatrols(Long rangerId) {
+
         return patrolRepository.findByRanger_Id(rangerId);
     }
 
     @Override
     public Patrol getPatrolByReference(String patrolReference) {
 
-        return patrolRepository.findByPatrolReference(patrolReference)
+        return patrolRepository
+                .findByPatrolReference(patrolReference)
                 .orElseThrow(() ->
                         new PatrolNotFoundException(patrolReference));
     }
@@ -38,16 +40,14 @@ public class PatrolServiceImpl implements PatrolService {
 
         Patrol patrol = getPatrolByReference(patrolReference);
 
-        if (patrol.getStatus() != PatrolStatus.ASSIGNED) {
-            throw new InvalidPatrolStateException(
-                    "Only an assigned patrol can be started."
-            );
-        }
+        validatePatrolCanBeStarted(patrol);
 
         patrol.setStatus(PatrolStatus.IN_PROGRESS);
         patrol.setStartTime(LocalDateTime.now());
 
-        return patrolRepository.save(patrol);
+        patrolRepository.save(patrol);
+
+        return getPatrolByReference(patrolReference);
     }
 
     @Override
@@ -55,15 +55,31 @@ public class PatrolServiceImpl implements PatrolService {
 
         Patrol patrol = getPatrolByReference(patrolReference);
 
+        validatePatrolCanBeCompleted(patrol);
+
+        patrol.setStatus(PatrolStatus.COMPLETED);
+        patrol.setEndTime(LocalDateTime.now());
+
+        patrolRepository.save(patrol);
+
+        return getPatrolByReference(patrolReference);
+    }
+
+    private void validatePatrolCanBeStarted(Patrol patrol) {
+
+        if (patrol.getStatus() != PatrolStatus.ASSIGNED) {
+            throw new InvalidPatrolStateException(
+                    "Only an assigned patrol can be started."
+            );
+        }
+    }
+
+    private void validatePatrolCanBeCompleted(Patrol patrol) {
+
         if (patrol.getStatus() != PatrolStatus.IN_PROGRESS) {
             throw new InvalidPatrolStateException(
                     "Only an active patrol can be completed."
             );
         }
-
-        patrol.setStatus(PatrolStatus.COMPLETED);
-        patrol.setEndTime(LocalDateTime.now());
-
-        return patrolRepository.save(patrol);
     }
 }
