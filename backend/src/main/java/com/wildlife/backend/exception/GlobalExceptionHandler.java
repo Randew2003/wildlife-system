@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.wildlife.backend.exception.InvalidPatrolStateException;
+import com.wildlife.backend.exception.PatrolNotFoundException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,6 +25,47 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(response);
     }
+
+
+
+        @ExceptionHandler(PatrolNotFoundException.class)
+public ResponseEntity<Map<String, String>> handlePatrolNotFound(
+        PatrolNotFoundException exception) {
+
+    Map<String, String> response = new LinkedHashMap<>();
+    response.put("error", exception.getMessage());
+
+    return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(response);
+}
+
+
+
+
+
+
+
+
+
+        @ExceptionHandler(InvalidPatrolStateException.class)
+public ResponseEntity<Map<String, String>> handleInvalidPatrolState(
+        InvalidPatrolStateException exception) {
+
+    Map<String, String> response = new LinkedHashMap<>();
+    response.put("error", exception.getMessage());
+
+    return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(response);
+}
+
+
+
+
+
+
+
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(
@@ -55,4 +98,11 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errors);
     }
+
+
+        
+
+
+
+
 }
