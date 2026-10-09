@@ -1,5 +1,6 @@
 package com.wildlife.backend.service.impl;
 
+import com.wildlife.backend.exception.InvalidAlertStateException;
 import com.wildlife.backend.entity.AlertStatus;
 import com.wildlife.backend.entity.GPSLocation;
 import com.wildlife.backend.entity.RiskAlert;
@@ -132,7 +133,7 @@ public class RiskAlertServiceImpl implements RiskAlertService {
          */
         if (alert.getStatus() != AlertStatus.DETECTED) {
 
-            throw new IllegalStateException(
+            throw new InvalidAlertStateException(
                     "Only detected alerts can be accepted."
             );
         }
@@ -159,7 +160,7 @@ public class RiskAlertServiceImpl implements RiskAlertService {
          */
         if (alert.getStatus() != AlertStatus.ACCEPTED) {
 
-            throw new IllegalStateException(
+            throw new InvalidAlertStateException(
                     "Only accepted alerts can start a response."
             );
         }
@@ -186,7 +187,7 @@ public class RiskAlertServiceImpl implements RiskAlertService {
          */
         if (alert.getStatus() != AlertStatus.RESPONDING) {
 
-            throw new IllegalStateException(
+            throw new InvalidAlertStateException(
                     "Only responding alerts can be resolved."
             );
         }
