@@ -99,10 +99,15 @@ public ResponseEntity<Map<String, String>> handleInvalidPatrolState(
                 .body(errors);
     }
 
+    @ExceptionHandler(InvalidAlertStateException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidAlertState(
+                InvalidAlertStateException exception) {
 
-        
+        Map<String, String> response = new LinkedHashMap<>();
+        response.put("error", exception.getMessage());
 
-
-
-
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+        }
 }

@@ -1,5 +1,6 @@
 package com.wildlife.backend.controller;
 
+import com.wildlife.backend.dto.response.AnimalResponse;
 import com.wildlife.backend.entity.Animal;
 import com.wildlife.backend.service.interfaces.AnimalService;
 import org.springframework.http.HttpStatus;
@@ -19,41 +20,52 @@ public class AnimalController {
     }
 
     @PostMapping
-    public ResponseEntity<Animal> createAnimal(
+    public ResponseEntity<AnimalResponse> createAnimal(
             @RequestBody Animal animal) {
+
+        Animal savedAnimal = animalService.createAnimal(animal);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(animalService.createAnimal(animal));
+                .body(AnimalResponse.fromEntity(savedAnimal));
     }
 
     @GetMapping
-    public ResponseEntity<List<Animal>> getAllAnimals() {
+    public ResponseEntity<List<AnimalResponse>> getAllAnimals() {
 
-        return ResponseEntity.ok(
+        List<AnimalResponse> responses =
                 animalService.getAllAnimals()
-        );
+                        .stream()
+                        .map(AnimalResponse::fromEntity)
+                        .toList();
+
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{animalId}")
-    public ResponseEntity<Animal> getAnimal(
+    public ResponseEntity<AnimalResponse> getAnimal(
             @PathVariable String animalId) {
 
+        Animal animal = animalService.getAnimal(animalId);
+
         return ResponseEntity.ok(
-                animalService.getAnimal(animalId)
+                AnimalResponse.fromEntity(animal)
         );
     }
 
     @PutMapping("/{animalId}")
-    public ResponseEntity<Animal> updateAnimal(
+    public ResponseEntity<AnimalResponse> updateAnimal(
             @PathVariable String animalId,
             @RequestBody Animal animal) {
 
-        return ResponseEntity.ok(
+        Animal updatedAnimal =
                 animalService.updateAnimal(
                         animalId,
                         animal
-                )
+                );
+
+        return ResponseEntity.ok(
+                AnimalResponse.fromEntity(updatedAnimal)
         );
     }
 

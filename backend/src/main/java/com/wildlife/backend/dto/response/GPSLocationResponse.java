@@ -17,26 +17,27 @@ public class GPSLocationResponse {
 
     public GPSLocationResponse(
             Long id,
-            String animalId,
-            Double latitude,
-            Double longitude,
-            LocalDateTime recordedAt) {
+            double latitude,
+            double longitude,
+            LocalDateTime recordedAt,
+            String animalId) {
 
         this.id = id;
-        this.animalId = animalId;
         this.latitude = latitude;
         this.longitude = longitude;
         this.recordedAt = recordedAt;
+        this.animalId = animalId;
     }
 
-    public static GPSLocationResponse fromEntity(GPSLocation location) {
+    public static GPSLocationResponse fromEntity(
+            GPSLocation location) {
 
         return new GPSLocationResponse(
                 location.getId(),
-                location.getAnimal().getAnimalId(),
                 location.getLatitude(),
                 location.getLongitude(),
-                location.getRecordedAt()
+                location.getRecordedAt(),
+                location.getAnimal().getAnimalId()
         );
     }
 
@@ -53,10 +54,20 @@ public class GPSLocationResponse {
     }
 
     public Double getLongitude() {
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public double getLongitude() {
         return longitude;
     }
 
     public LocalDateTime getRecordedAt() {
         return recordedAt;
+    }
+}
+
+    public String getAnimalId() {
+        return animalId;
     }
 }

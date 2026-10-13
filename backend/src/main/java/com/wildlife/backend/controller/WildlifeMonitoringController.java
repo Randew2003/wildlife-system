@@ -5,6 +5,7 @@ import com.wildlife.backend.dto.response.GPSLocationResponse;
 import com.wildlife.backend.entity.GPSLocation;
 import com.wildlife.backend.repository.GPSLocationRepository;
 import com.wildlife.backend.service.interfaces.GPSLocationService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,9 +27,9 @@ public class WildlifeMonitoringController {
     }
 
     @PostMapping("/{animalId}/location")
-    public ResponseEntity<GPSLocation> receiveLocation(
+    public ResponseEntity<GPSLocationResponse> receiveLocation(
             @PathVariable String animalId,
-            @RequestBody GPSLocationRequest request) {
+            @RequestBody @Valid GPSLocationRequest request) {
 
         GPSLocation location =
                 gpsLocationService.processLocation(
@@ -38,7 +39,9 @@ public class WildlifeMonitoringController {
                         request.getRecordedAt()
                 );
 
-        return ResponseEntity.ok(location);
+        return ResponseEntity.ok(
+                GPSLocationResponse.fromEntity(location)
+        );
     }
 
     @GetMapping("/{animalId}/locations")
