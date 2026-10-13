@@ -3,7 +3,10 @@ package com.wildlife.backend.service;
 import com.wildlife.backend.entity.ConflictReport;
 import com.wildlife.backend.entity.ConflictReportStatus;
 import com.wildlife.backend.entity.LocationSource;
+import com.wildlife.backend.entity.UserAccount;
+import com.wildlife.backend.entity.UserRole;
 import com.wildlife.backend.repository.ConflictReportRepository;
+import com.wildlife.backend.repository.UserAccountRepository;
 import com.wildlife.backend.service.impl.ConflictReportServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +26,9 @@ class ConflictReportLifecycleServiceTest {
 
     @Mock
     private ConflictReportRepository conflictReportRepository;
+
+    @Mock
+    private UserAccountRepository userAccountRepository;
 
     @InjectMocks
     private ConflictReportServiceImpl conflictReportService;
@@ -48,22 +54,27 @@ class ConflictReportLifecycleServiceTest {
     }
 
     @Test
-    void assignRanger_shouldAssignRangerAndChangeStatus() {
+    void assignRanger_shouldAssignCommunityLiaisonAndChangeStatus() {
 
         ConflictReport report = createReport(ConflictReportStatus.UNDER_REVIEW);
 
         when(conflictReportRepository.findByReportId("TEST-REPORT"))
                 .thenReturn(Optional.of(report));
 
+        when(userAccountRepository.findByEmailIgnoreCaseAndRoleAndEnabledTrue(
+                "liaison@example.com",
+                UserRole.COMMUNITY_LIAISON_OFFICER))
+                .thenReturn(Optional.of(createLiaison()));
+
         when(conflictReportRepository.save(any(ConflictReport.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         ConflictReport result = conflictReportService.assignRanger(
                 "TEST-REPORT",
-                "Ranger Kamal");
+                "liaison@example.com");
 
         assertEquals(
-                "Ranger Kamal",
+                "liaison@example.com",
                 result.getAssignedRanger());
 
         assertEquals(
@@ -86,6 +97,30 @@ class ConflictReportLifecycleServiceTest {
                 () -> conflictReportService.assignRanger(
                         "TEST-REPORT",
                         ""));
+
+        verify(
+                conflictReportRepository,
+                never()).save(any(ConflictReport.class));
+    }
+
+    @Test
+    void assignRanger_shouldRejectNonLiaisonResponder() {
+
+        ConflictReport report = createReport(ConflictReportStatus.UNDER_REVIEW);
+
+        when(conflictReportRepository.findByReportId("TEST-REPORT"))
+                .thenReturn(Optional.of(report));
+
+        when(userAccountRepository.findByEmailIgnoreCaseAndRoleAndEnabledTrue(
+                "ranger@example.com",
+                UserRole.COMMUNITY_LIAISON_OFFICER))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> conflictReportService.assignRanger(
+                        "TEST-REPORT",
+                        "ranger@example.com"));
 
         verify(
                 conflictReportRepository,
@@ -127,7 +162,8 @@ class ConflictReportLifecycleServiceTest {
 
         ConflictReport result = conflictReportService.resolveReport(
                 "TEST-REPORT",
-                "Elephant moved away safely.");
+                "Elephant moved away safely.",
+                "SOLVED");
 
         assertEquals(
                 ConflictReportStatus.RESOLVED,
@@ -136,6 +172,10 @@ class ConflictReportLifecycleServiceTest {
         assertEquals(
                 "Elephant moved away safely.",
                 result.getResponseNotes());
+
+        assertEquals(
+                "SOLVED",
+                result.getResponseOutcome());
 
         assertNotNull(result.getResolvedAt());
 
@@ -181,9 +221,9 @@ class ConflictReportLifecycleServiceTest {
     }
 
     @Test
-    void assignRanger_shouldRejectNonReviewReport() {
+    void assignRanger_shouldRejectPendingReport() {
 
-        ConflictReport report = createReport(ConflictReportStatus.SUBMITTED);
+        ConflictReport report = createReport(ConflictReportStatus.PENDING_SYNC);
 
         when(conflictReportRepository.findByReportId("TEST-REPORT"))
                 .thenReturn(Optional.of(report));
@@ -229,7 +269,8 @@ class ConflictReportLifecycleServiceTest {
                 IllegalStateException.class,
                 () -> conflictReportService.resolveReport(
                         "TEST-REPORT",
-                        "Cannot resolve yet."));
+                        "Cannot resolve yet.",
+                        "NOT_SOLVED"));
 
         verify(
                 conflictReportRepository,
@@ -267,6 +308,18 @@ class ConflictReportLifecycleServiceTest {
                 "MEDIUM",
                 null,
                 status,
+                LocalDateTime.now());
+    }
+
+    private UserAccount createLiaison() {
+
+        return new UserAccount(
+                "Community Liaison",
+                "liaison@example.com",
+                "hashed-password",
+                UserRole.COMMUNITY_LIAISON_OFFICER,
+                null,
+                true,
                 LocalDateTime.now());
     }
 }

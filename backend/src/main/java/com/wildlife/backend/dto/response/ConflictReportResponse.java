@@ -20,6 +20,7 @@ public class ConflictReportResponse {
     private LocalDateTime reportedAt;
     private LocalDateTime resolvedAt;
     private String responseNotes;
+    private String responseOutcome;
     private boolean possibleDuplicate;
 
     public ConflictReportResponse(
@@ -36,6 +37,7 @@ public class ConflictReportResponse {
             LocalDateTime reportedAt,
             LocalDateTime resolvedAt,
             String responseNotes,
+            String responseOutcome,
             boolean possibleDuplicate) {
 
         this.reportId = reportId;
@@ -51,6 +53,7 @@ public class ConflictReportResponse {
         this.reportedAt = reportedAt;
         this.resolvedAt = resolvedAt;
         this.responseNotes = responseNotes;
+        this.responseOutcome = responseOutcome;
         this.possibleDuplicate = possibleDuplicate;
     }
 
@@ -104,6 +107,10 @@ public class ConflictReportResponse {
 
     public String getResponseNotes() {
         return responseNotes;
+    }
+
+    public String getResponseOutcome() {
+        return responseOutcome;
     }
 
     public boolean isPossibleDuplicate() {

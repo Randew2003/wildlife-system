@@ -19,6 +19,18 @@ public class PatrolRoute {
     @Column
     private String description;
 
+    @Column
+    private Double startLatitude;
+
+    @Column
+    private Double startLongitude;
+
+    @Column
+    private Double endLatitude;
+
+    @Column
+    private Double endLongitude;
+
     public PatrolRoute() {
     }
 
@@ -27,9 +39,25 @@ public class PatrolRoute {
             String routeName,
             String description) {
 
+        this(routeId, routeName, description, null, null, null, null);
+    }
+
+    public PatrolRoute(
+            String routeId,
+            String routeName,
+            String description,
+            Double startLatitude,
+            Double startLongitude,
+            Double endLatitude,
+            Double endLongitude) {
+
         this.routeId = routeId;
         this.routeName = routeName;
         this.description = description;
+        this.startLatitude = startLatitude;
+        this.startLongitude = startLongitude;
+        this.endLatitude = endLatitude;
+        this.endLongitude = endLongitude;
     }
 
     public Long getId() {
@@ -58,5 +86,37 @@ public class PatrolRoute {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Double getStartLatitude() {
+        return startLatitude;
+    }
+
+    public void setStartLatitude(Double startLatitude) {
+        this.startLatitude = startLatitude;
+    }
+
+    public Double getStartLongitude() {
+        return startLongitude;
+    }
+
+    public void setStartLongitude(Double startLongitude) {
+        this.startLongitude = startLongitude;
+    }
+
+    public Double getEndLatitude() {
+        return endLatitude;
+    }
+
+    public void setEndLatitude(Double endLatitude) {
+        this.endLatitude = endLatitude;
+    }
+
+    public Double getEndLongitude() {
+        return endLongitude;
+    }
+
+    public void setEndLongitude(Double endLongitude) {
+        this.endLongitude = endLongitude;
     }
 }

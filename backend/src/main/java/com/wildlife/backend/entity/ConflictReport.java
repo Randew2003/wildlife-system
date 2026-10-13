@@ -48,6 +48,8 @@ public class ConflictReport {
 
     private String responseNotes;
 
+    private String responseOutcome;
+
     @Column(nullable = false)
     private boolean possibleDuplicate;
 
@@ -185,6 +187,14 @@ public class ConflictReport {
 
     public void setResponseNotes(String responseNotes) {
         this.responseNotes = responseNotes;
+    }
+
+    public String getResponseOutcome() {
+        return responseOutcome;
+    }
+
+    public void setResponseOutcome(String responseOutcome) {
+        this.responseOutcome = responseOutcome;
     }
 
     public boolean isPossibleDuplicate() {

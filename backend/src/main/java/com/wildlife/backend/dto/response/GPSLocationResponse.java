@@ -7,10 +7,10 @@ import java.time.LocalDateTime;
 public class GPSLocationResponse {
 
     private Long id;
-    private double latitude;
-    private double longitude;
-    private LocalDateTime recordedAt;
     private String animalId;
+    private Double latitude;
+    private Double longitude;
+    private LocalDateTime recordedAt;
 
     public GPSLocationResponse() {
     }
@@ -45,6 +45,15 @@ public class GPSLocationResponse {
         return id;
     }
 
+    public String getAnimalId() {
+        return animalId;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public Double getLongitude() {
     public double getLatitude() {
         return latitude;
     }
@@ -56,6 +65,7 @@ public class GPSLocationResponse {
     public LocalDateTime getRecordedAt() {
         return recordedAt;
     }
+}
 
     public String getAnimalId() {
         return animalId;
