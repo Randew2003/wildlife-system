@@ -116,6 +116,11 @@ public class RiskAlertServiceImpl implements RiskAlertService {
                         ));
     }
 
+    @Override
+    public RiskAlert acceptAlert(String alertId) {
+        return acceptAlert(alertId, null);
+    }
+
     @Transactional
     @Override
     public RiskAlert acceptAlert(String alertId, String responder) {

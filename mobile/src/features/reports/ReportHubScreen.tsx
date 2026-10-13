@@ -85,12 +85,16 @@ export function ReportHubScreen({ session }: { session: AuthSession }) {
         }
       }
 
+      if (activeTab === 'history') {
+        void refreshConflicts();
+      }
+
       previousQueuedReferences.current = nextReferences;
       setQueuedIncidents(nextQueued);
     } catch (exception) {
       setQueueError(exception instanceof Error ? exception.message : 'Unable to load queued incidents.');
     }
-  }, [activeTab, refreshIncidents]);
+  }, [activeTab, refreshConflicts, refreshIncidents]);
 
   useEffect(() => {
     if (!syncSuccessMessage) {
@@ -181,6 +185,7 @@ export function ReportHubScreen({ session }: { session: AuthSession }) {
                   setActiveTab(tab.key);
                   if (tab.key === 'history') {
                     void refreshQueuedIncidents();
+                    void refreshConflicts();
                   }
                 }}
                 className={cx('rounded-md px-3 py-2', selected ? 'bg-forest-600' : 'bg-white')}

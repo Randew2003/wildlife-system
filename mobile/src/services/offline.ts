@@ -58,16 +58,21 @@ export async function flushOfflineQueue(
   const synced: OfflineQueueItem[] = [];
 
   for (const item of queue) {
+    const endpoint =
+      item.endpoint === '/api/conflict-reports/offline' && item.method === 'POST'
+        ? '/api/conflict-reports'
+        : item.endpoint;
+
     if (
       (onlyItemId && item.id !== onlyItemId) ||
-      (onlyEndpoint && (item.endpoint !== onlyEndpoint || item.method !== 'POST'))
+      (onlyEndpoint && (endpoint !== onlyEndpoint || item.method !== 'POST'))
     ) {
       remaining.push(item);
       continue;
     }
 
     try {
-      await apiRequest(item.endpoint, {
+      await apiRequest(endpoint, {
         method: item.method,
         token,
         body: item.body,

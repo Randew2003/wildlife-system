@@ -1123,7 +1123,7 @@ function ConflictWizard({
         const body = payload();
         await enqueueOffline({
           label: `Conflict report ${body.conflictType}`,
-          endpoint: '/api/conflict-reports/offline',
+          endpoint: '/api/conflict-reports',
           method: 'POST',
           body,
         });
