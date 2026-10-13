@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as Network from 'expo-network';
-import MapView, { Marker, type MapPressEvent, type Region } from 'react-native-maps';
 import { Image, Pressable, Text, View } from 'react-native';
 
+import MapView, { Marker } from '../../components/MapView';
+import type { MapPressEvent, MapRegion } from '../../components/MapView.types';
 import { incidentOptions } from '@/features/app/constants';
 import type { FormErrors } from '@/features/app/helpers';
 import {
@@ -44,7 +45,7 @@ type SubmissionConfirmation = {
   offline: boolean;
 };
 
-const manualMapRegion: Region = {
+const manualMapRegion: MapRegion = {
   latitude: 7.8731,
   longitude: 80.7718,
   latitudeDelta: 0.65,
