@@ -35,7 +35,7 @@ function normalizeBaseUrl(value: string) {
 
 export const API_BASE_URL = normalizeBaseUrl(
   env?.EXPO_PUBLIC_API_BASE_URL ??
-    (Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080'),
+    (Platform.OS === 'android' ? 'http://10.97.126.1:8080' : 'http://localhost:8080'),
 );
 
 export class ApiError extends Error {

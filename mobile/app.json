@@ -29,7 +29,14 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow mobile to record patrol GPS points while a patrol is active."
+          "locationWhenInUsePermission": "Allow Wildlife Field App to use your location when reporting wildlife incidents and recording field activity."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Wildlife Field App to take incident evidence photos.",
+          "photosPermission": "Allow Wildlife Field App to attach incident evidence photos."
         }
       ],
       [

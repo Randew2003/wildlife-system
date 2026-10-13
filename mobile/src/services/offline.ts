@@ -26,12 +26,46 @@ export async function enqueueOffline(item: Omit<OfflineQueueItem, 'id' | 'create
   return queuedItem;
 }
 
-export async function flushOfflineQueue(token: string) {
+export async function recordOfflineQueueFailure(itemId: string) {
+  const queue = await getOfflineQueue();
+  let found = false;
+  const updatedQueue = queue.map((item) => {
+    if (item.id !== itemId) {
+      return item;
+    }
+
+    found = true;
+    return {
+      ...item,
+      attempts: item.attempts + 1,
+    };
+  });
+
+  if (found) {
+    await saveOfflineQueue(updatedQueue);
+  }
+
+  return found;
+}
+
+export async function flushOfflineQueue(
+  token: string,
+  onlyItemId?: string,
+  onlyEndpoint?: string,
+) {
   const queue = await getOfflineQueue();
   const remaining: OfflineQueueItem[] = [];
   const synced: OfflineQueueItem[] = [];
 
   for (const item of queue) {
+    if (
+      (onlyItemId && item.id !== onlyItemId) ||
+      (onlyEndpoint && (item.endpoint !== onlyEndpoint || item.method !== 'POST'))
+    ) {
+      remaining.push(item);
+      continue;
+    }
+
     try {
       await apiRequest(item.endpoint, {
         method: item.method,

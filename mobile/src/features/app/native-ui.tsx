@@ -245,7 +245,7 @@ export function ChoiceGroup<T extends string>({
   error,
 }: {
   label: string;
-  value: T;
+  value: T | null;
   options: readonly { label: string; value: T }[];
   onChange: (value: T) => void;
   error?: string;

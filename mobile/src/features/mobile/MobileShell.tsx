@@ -1,6 +1,7 @@
 import { SymbolView } from 'expo-symbols';
 import type { SymbolViewProps } from 'expo-symbols';
-import { useEffect, useState } from 'react';
+import * as Network from 'expo-network';
+import { useEffect, useRef, useState } from 'react';
 import { AppState, ScrollView, Text, View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -69,6 +70,7 @@ function mobileEyebrow(role: UserRole) {
 
 export function MobileShell({ session }: { session: AuthSession }) {
   const [activeTab, setActiveTab] = useState<MobileTab>('home');
+  const offlineQueueSyncing = useRef(false);
   const insets = useSafeAreaInsets();
   const visibleTabs = mobileNavItems.filter((item) => !item.roles || item.roles.includes(session.role));
   const bottomInset = Math.max(insets.bottom, 12);
@@ -82,14 +84,12 @@ export function MobileShell({ session }: { session: AuthSession }) {
   const alertCount = alerts.data?.filter((alert) => alert.status !== 'RESOLVED').length ?? 0;
 
   useEffect(() => {
-    let syncing = false;
-
     const syncPendingReports = async () => {
-      if (syncing || AppState.currentState !== 'active') {
+      if (offlineQueueSyncing.current || AppState.currentState !== 'active') {
         return;
       }
 
-      syncing = true;
+      offlineQueueSyncing.current = true;
 
       try {
         const pending = await getOfflineQueue();
@@ -100,7 +100,7 @@ export function MobileShell({ session }: { session: AuthSession }) {
       } catch (exception) {
         console.error('Unable to synchronize offline reports.', exception);
       } finally {
-        syncing = false;
+        offlineQueueSyncing.current = false;
       }
     };
 
@@ -119,6 +119,45 @@ export function MobileShell({ session }: { session: AuthSession }) {
       clearInterval(timer);
       subscription.remove();
     };
+  }, [session.token]);
+
+  useEffect(() => {
+    let previousOnline: boolean | null = null;
+
+    const subscription = Network.addNetworkStateListener((state) => {
+      const online = Boolean(state.isConnected && state.isInternetReachable !== false);
+      const reconnected = online && previousOnline !== true;
+      previousOnline = online;
+
+      if (!reconnected || offlineQueueSyncing.current) {
+        return;
+      }
+
+      offlineQueueSyncing.current = true;
+      void (async () => {
+        try {
+          const queuedIncidents = (await getOfflineQueue()).filter(
+            (item) => item.endpoint === '/api/v1/incidents' && item.method === 'POST',
+          );
+
+          if (queuedIncidents.length) {
+            await flushOfflineQueue(session.token, undefined, '/api/v1/incidents');
+          }
+        } catch (exception) {
+          console.error('Unable to synchronize queued wildlife incidents.', exception);
+        } finally {
+          offlineQueueSyncing.current = false;
+        }
+      })();
+    });
+
+    void Network.getNetworkStateAsync().then((state) => {
+      previousOnline = Boolean(state.isConnected && state.isInternetReachable !== false);
+    }).catch((exception: unknown) => {
+      console.error('Unable to read network state for wildlife incident synchronization.', exception);
+    });
+
+    return () => subscription.remove();
   }, [session.token]);
 
   useEffect(() => {
