@@ -23,114 +23,115 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ConflictReportOfflineSyncTest {
 
-    @Mock
-    private ConflictReportRepository conflictReportRepository;
+  @Mock
+  private ConflictReportRepository conflictReportRepository;
 
-    @InjectMocks
-    private ConflictReportServiceImpl conflictReportService;
+  @InjectMocks
+  private ConflictReportServiceImpl conflictReportService;
 
-    private ConflictReportRequest validRequest;
+  private ConflictReportRequest validRequest;
 
-    @BeforeEach
-    void setUp() {
-        validRequest = new ConflictReportRequest();
+  @BeforeEach
+  void setUp() {
+    validRequest = new ConflictReportRequest();
 
-        validRequest.setConflictType("Elephant Sighting");
-        validRequest.setDescription(
-                "Elephant observed while network was unavailable.");
-        validRequest.setLatitude(6.8201);
-        validRequest.setLongitude(80.0240);
-        validRequest.setLocationSource(LocationSource.GPS);
-        validRequest.setSeverity("MEDIUM");
-        validRequest.setPhotoUrl(null);
-    }
+    validRequest.setConflictType("Elephant Sighting");
+    validRequest.setDescription(
+        "Elephant observed while network was unavailable.");
+    validRequest.setLatitude(6.8201);
+    validRequest.setLongitude(80.0240);
+    validRequest.setLocationSource(LocationSource.GPS);
+    validRequest.setSeverity("MEDIUM");
+    validRequest.setPhotoUrl(null);
+  }
 
-    @Test
-    void createOfflineReport_shouldCreatePendingSyncReport() {
+  @Test
+  void createOfflineReport_shouldCreatePendingSyncReport() {
 
-        when(conflictReportRepository.save(any(ConflictReport.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+    when(conflictReportRepository.save(any(ConflictReport.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
 
-        ConflictReport result = conflictReportService.createOfflineReport(validRequest);
+    ConflictReport result = conflictReportService.createOfflineReport(validRequest);
 
-        assertNotNull(result);
-        assertNotNull(result.getReportId());
+    assertNotNull(result);
+    assertNotNull(result.getReportId());
 
-        assertTrue(
-                result.getReportId().startsWith("CONFLICT-"));
+    assertTrue(
+        result.getReportId().startsWith("CONFLICT-"));
 
-        assertEquals(
-                ConflictReportStatus.PENDING_SYNC,
-                result.getStatus());
+    assertEquals(
+        ConflictReportStatus.PENDING_SYNC,
+        result.getStatus());
 
-        assertEquals(
-                "Elephant Sighting",
-                result.getConflictType());
+    assertEquals(
+        "Elephant Sighting",
+        result.getConflictType());
 
-        assertNotNull(result.getReportedAt());
+    assertNotNull(result.getReportedAt());
 
-        verify(conflictReportRepository)
-                .save(any(ConflictReport.class));
-    }
+    verify(conflictReportRepository)
+        .save(any(ConflictReport.class));
+  }
 
-    @Test
-    void syncReport_shouldChangePendingSyncToSubmitted() {
+  @Test
+  void syncReport_shouldChangePendingSyncToSubmitted() {
 
-        ConflictReport report = new ConflictReport(
-                "CONFLICT-OFFLINE",
-                "Elephant Sighting",
-                "Offline report.",
-                6.8201,
-                80.0240,
-                LocationSource.GPS,
-                "MEDIUM",
-                null,
-                ConflictReportStatus.PENDING_SYNC,
-                LocalDateTime.now());
+    ConflictReport report = new ConflictReport(
+        "CONFLICT-OFFLINE",
+        "Elephant Sighting",
+        "Offline report.",
+        6.8201,
+        80.0240,
+        LocationSource.GPS,
+        "MEDIUM",
+        null,
+        ConflictReportStatus.PENDING_SYNC,
+        LocalDateTime.now());
 
-        when(conflictReportRepository
-                .findByReportId("CONFLICT-OFFLINE"))
-                .thenReturn(Optional.of(report));
+    when(conflictReportRepository
+        .findByReportId("CONFLICT-OFFLINE"))
+        .thenReturn(Optional.of(report));
 
-        when(conflictReportRepository.save(any(ConflictReport.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+    when(conflictReportRepository.save(any(ConflictReport.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
 
-        ConflictReport result = conflictReportService.syncReport(
-                "CONFLICT-OFFLINE");
+    ConflictReport result = conflictReportService.syncReport(
+        "CONFLICT-OFFLINE");
 
-        assertEquals(
-                ConflictReportStatus.SUBMITTED,
-                result.getStatus());
+    assertEquals(
+        ConflictReportStatus.SUBMITTED,
+        result.getStatus());
 
-        verify(conflictReportRepository)
-                .save(report);
-    }
+    verify(conflictReportRepository)
+        .save(report);
+  }
 
-    @Test
-    void syncReport_shouldRejectAlreadySubmittedReport() {
+  @Test
+  void syncReport_shouldRejectAlreadySubmittedReport() {
 
-        ConflictReport report = new ConflictReport(
-                "CONFLICT-SUBMITTED",
-                "Elephant Sighting",
-                "Already submitted report.",
-                6.8201,
-                80.0240,
-                LocationSource.GPS,
-                "MEDIUM",
-                null,
-                ConflictReportStatus.SUBMITTED,
-                LocalDateTime.now());
+    ConflictReport report = new ConflictReport(
+        "CONFLICT-SUBMITTED",
+        "Elephant Sighting",
+        "Already submitted report.",
+        6.8201,
+        80.0240,
+        LocationSource.GPS,
+        "MEDIUM",
+        null,
+        ConflictReportStatus.SUBMITTED,
+        LocalDateTime.now());
 
-        when(conflictReportRepository
-                .findByReportId("CONFLICT-SUBMITTED"))
-                .thenReturn(Optional.of(report));
+    when(conflictReportRepository
+        .findByReportId("CONFLICT-SUBMITTED"))
+        .thenReturn(Optional.of(report));
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> conflictReportService.syncReport(
-                        "CONFLICT-SUBMITTED"));
+    assertThrows(
+        IllegalStateException.class,
+        () -> conflictReportService.syncReport(
+            "CONFLICT-SUBMITTED"));
 
-        verify(conflictReportRepository, never())
-                .save(any(ConflictReport.class));
-    }
+    verify(conflictReportRepository, never())
+        .save(any(ConflictReport.class));
+  }
+
 }

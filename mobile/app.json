@@ -20,11 +20,25 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
+      "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Wildlife Field App to use your location when reporting wildlife incidents and recording field activity."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Wildlife Field App to take incident evidence photos.",
+          "photosPermission": "Allow Wildlife Field App to attach incident evidence photos."
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -35,7 +49,6 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
       "reactCompiler": true
     }
   }
