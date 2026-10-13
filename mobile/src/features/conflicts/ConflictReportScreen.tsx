@@ -2,8 +2,9 @@ import * as Location from 'expo-location';
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Image, Text, View } from 'react-native';
-import MapView, { Marker, type MapPressEvent } from 'react-native-maps';
 
+import MapView, { Marker } from '../../components/MapView';
+import type { MapPressEvent } from '../../components/MapView.types';
 import {
   conflictTypeOptions,
   locationSourceOptions,
