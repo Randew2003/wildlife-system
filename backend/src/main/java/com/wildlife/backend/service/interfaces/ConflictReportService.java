@@ -23,7 +23,7 @@ public interface ConflictReportService {
 
     ConflictReport startResponse(String reportId);
 
-    ConflictReport resolveReport(String reportId, String responseNotes);
+    ConflictReport resolveReport(String reportId, String responseNotes, String responseOutcome);
 
     ConflictReport closeReport(String reportId);
 }

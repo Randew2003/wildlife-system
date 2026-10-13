@@ -81,13 +81,18 @@ public class ConflictReportController {
         @PutMapping("/{reportId}/assign")
         public ResponseEntity<ConflictReportResponse> assignRanger(
                         @PathVariable String reportId,
-                        @RequestParam String ranger) {
+                        @RequestParam(required = false) String responder,
+                        @RequestParam(required = false) String ranger) {
+
+                String assignedResponder = responder == null || responder.isBlank()
+                                ? ranger
+                                : responder;
 
                 return ResponseEntity.ok(
                                 toResponse(
                                                 conflictReportService.assignRanger(
                                                                 reportId,
-                                                                ranger)));
+                                                                assignedResponder)));
         }
 
         @PutMapping("/{reportId}/respond")
@@ -102,13 +107,15 @@ public class ConflictReportController {
         @PutMapping("/{reportId}/resolve")
         public ResponseEntity<ConflictReportResponse> resolveReport(
                         @PathVariable String reportId,
-                        @RequestParam(required = false) String responseNotes) {
+                        @RequestParam(required = false) String responseNotes,
+                        @RequestParam(required = false) String responseOutcome) {
 
                 return ResponseEntity.ok(
                                 toResponse(
                                                 conflictReportService.resolveReport(
                                                                 reportId,
-                                                                responseNotes)));
+                                                                responseNotes,
+                                                                responseOutcome)));
         }
 
         @PutMapping("/{reportId}/close")
@@ -137,6 +144,7 @@ public class ConflictReportController {
                                 report.getReportedAt(),
                                 report.getResolvedAt(),
                                 report.getResponseNotes(),
+                                report.getResponseOutcome(),
                                 report.isPossibleDuplicate());
         }
 }

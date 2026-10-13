@@ -14,6 +14,9 @@ public interface PatrolRepository extends JpaRepository<Patrol, Long> {
     Optional<Patrol> findByPatrolReference(String patrolReference);
 
     @EntityGraph(attributePaths = {"ranger", "route"})
+    List<Patrol> findAll();
+
+    @EntityGraph(attributePaths = {"ranger", "route"})
     List<Patrol> findByRanger_Id(Long rangerId);
 
     List<Patrol> findByStatus(PatrolStatus status);

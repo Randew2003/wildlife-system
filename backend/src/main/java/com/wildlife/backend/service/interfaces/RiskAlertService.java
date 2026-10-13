@@ -17,7 +17,7 @@ public interface RiskAlertService {
 
     RiskAlert getAlert(String alertId);
 
-    RiskAlert acceptAlert(String alertId);
+    RiskAlert acceptAlert(String alertId, String responder);
 
     RiskAlert startResponse(String alertId);
 

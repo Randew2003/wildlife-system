@@ -1,21 +1,28 @@
 package com.wildlife.backend.controller;
 
 import com.wildlife.backend.dto.request.GPSLocationRequest;
+import com.wildlife.backend.dto.response.GPSLocationResponse;
 import com.wildlife.backend.entity.GPSLocation;
+import com.wildlife.backend.repository.GPSLocationRepository;
 import com.wildlife.backend.service.interfaces.GPSLocationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/animals")
 public class WildlifeMonitoringController {
 
     private final GPSLocationService gpsLocationService;
+    private final GPSLocationRepository gpsLocationRepository;
 
     public WildlifeMonitoringController(
-            GPSLocationService gpsLocationService) {
+            GPSLocationService gpsLocationService,
+            GPSLocationRepository gpsLocationRepository) {
 
         this.gpsLocationService = gpsLocationService;
+        this.gpsLocationRepository = gpsLocationRepository;
     }
 
     @PostMapping("/{animalId}/location")
@@ -32,5 +39,19 @@ public class WildlifeMonitoringController {
                 );
 
         return ResponseEntity.ok(location);
+    }
+
+    @GetMapping("/{animalId}/locations")
+    public ResponseEntity<List<GPSLocationResponse>> getLocations(
+            @PathVariable String animalId) {
+
+        List<GPSLocationResponse> response =
+                gpsLocationRepository
+                        .findByAnimalAnimalIdOrderByRecordedAtDesc(animalId)
+                        .stream()
+                        .map(GPSLocationResponse::fromEntity)
+                        .toList();
+
+        return ResponseEntity.ok(response);
     }
 }
