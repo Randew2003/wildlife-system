@@ -3,7 +3,10 @@ package com.wildlife.backend.service.impl;
 import com.wildlife.backend.dto.request.ConflictReportRequest;
 import com.wildlife.backend.entity.ConflictReport;
 import com.wildlife.backend.entity.ConflictReportStatus;
+import com.wildlife.backend.entity.UserAccount;
+import com.wildlife.backend.entity.UserRole;
 import com.wildlife.backend.repository.ConflictReportRepository;
+import com.wildlife.backend.repository.UserAccountRepository;
 import com.wildlife.backend.service.interfaces.ConflictReportService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,11 +19,14 @@ import java.util.UUID;
 public class ConflictReportServiceImpl implements ConflictReportService {
 
     private final ConflictReportRepository conflictReportRepository;
+    private final UserAccountRepository userAccountRepository;
 
     public ConflictReportServiceImpl(
-            ConflictReportRepository conflictReportRepository) {
+            ConflictReportRepository conflictReportRepository,
+            UserAccountRepository userAccountRepository) {
 
         this.conflictReportRepository = conflictReportRepository;
+        this.userAccountRepository = userAccountRepository;
     }
 
     @Override
@@ -131,17 +137,29 @@ public class ConflictReportServiceImpl implements ConflictReportService {
 
         ConflictReport report = getReport(reportId);
 
-        if (report.getStatus() != ConflictReportStatus.UNDER_REVIEW) {
+        if (report.getStatus() != ConflictReportStatus.SUBMITTED
+                && report.getStatus() != ConflictReportStatus.UNDER_REVIEW) {
             throw new IllegalStateException(
-                    "Only reports under review can be assigned.");
+                    "Only submitted or reviewed reports can be assigned.");
         }
 
         if (ranger == null || ranger.isBlank()) {
             throw new IllegalArgumentException(
-                    "Ranger is required.");
+                    "Community liaison officer is required.");
         }
 
-        report.setAssignedRanger(ranger);
+        String responderEmail = ranger.trim();
+
+        UserAccount liaisonOfficer = userAccountRepository
+                .findByEmailIgnoreCaseAndRoleAndEnabledTrue(
+                        responderEmail,
+                        UserRole.COMMUNITY_LIAISON_OFFICER)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Community liaison officer not found: "
+                                        + responderEmail));
+
+        report.setAssignedRanger(liaisonOfficer.getEmail());
         report.setStatus(ConflictReportStatus.ASSIGNED);
 
         return conflictReportRepository.save(report);
@@ -167,7 +185,8 @@ public class ConflictReportServiceImpl implements ConflictReportService {
     @Override
     public ConflictReport resolveReport(
             String reportId,
-            String responseNotes) {
+            String responseNotes,
+            String responseOutcome) {
 
         ConflictReport report = getReport(reportId);
 
@@ -178,6 +197,11 @@ public class ConflictReportServiceImpl implements ConflictReportService {
 
         report.setStatus(ConflictReportStatus.RESOLVED);
         report.setResponseNotes(responseNotes);
+        report.setResponseOutcome(
+                responseOutcome == null || responseOutcome.isBlank()
+                        ? "SOLVED"
+                        : responseOutcome.trim()
+        );
         report.setResolvedAt(LocalDateTime.now());
 
         return conflictReportRepository.save(report);

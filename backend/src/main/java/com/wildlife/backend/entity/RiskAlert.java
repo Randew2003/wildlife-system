@@ -33,6 +33,9 @@ public class RiskAlert {
     @Column(nullable = false)
     private LocalDateTime detectedAt;
 
+    @Column
+    private String assignedResponder;
+
     public RiskAlert() {
     }
 
@@ -102,5 +105,13 @@ public class RiskAlert {
 
     public void setDetectedAt(LocalDateTime detectedAt) {
         this.detectedAt = detectedAt;
+    }
+
+    public String getAssignedResponder() {
+        return assignedResponder;
+    }
+
+    public void setAssignedResponder(String assignedResponder) {
+        this.assignedResponder = assignedResponder;
     }
 }

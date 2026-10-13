@@ -41,10 +41,11 @@ public class RiskAlertController {
 
     @PutMapping("/{alertId}/accept")
     public ResponseEntity<RiskAlertResponse> acceptAlert(
-            @PathVariable String alertId) {
+            @PathVariable String alertId,
+            @RequestParam(required = false) String responder) {
 
         RiskAlert alert =
-                riskAlertService.acceptAlert(alertId);
+                riskAlertService.acceptAlert(alertId, responder);
 
         return ResponseEntity.ok(toResponse(alert));
     }
@@ -77,8 +78,12 @@ public class RiskAlertController {
                 alert.getAnimal().getName(),
                 alert.getLocation().getId(),
                 alert.getRiskZone().getId(),
+                alert.getRiskZone().getZoneName(),
+                alert.getLocation().getLatitude(),
+                alert.getLocation().getLongitude(),
                 alert.getStatus(),
-                alert.getDetectedAt()
+                alert.getDetectedAt(),
+                alert.getAssignedResponder()
         );
     }
 }

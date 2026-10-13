@@ -16,7 +16,7 @@ import { RiskAlertsScreen } from '@/features/monitoring/RiskAlertsScreen';
 import { ReportHubScreen } from '@/features/reports/ReportHubScreen';
 import { ProfileScreen } from '@/features/profile/ProfileScreen';
 import { ResponderCasesScreen } from '@/features/conflicts/ResponderCasesScreen';
-import { alertApi } from '@/services/api';
+import { alertApi, conflictApi } from '@/services/api';
 
 const mobileNavItems: {
   key: MobileTab;
@@ -71,6 +71,7 @@ function mobileEyebrow(role: UserRole) {
 export function MobileShell({ session }: { session: AuthSession }) {
   const [activeTab, setActiveTab] = useState<MobileTab>('home');
   const offlineQueueSyncing = useRef(false);
+  const pendingConflictRecoveryComplete = useRef(false);
   const insets = useSafeAreaInsets();
   const visibleTabs = mobileNavItems.filter((item) => !item.roles || item.roles.includes(session.role));
   const bottomInset = Math.max(insets.bottom, 12);
@@ -92,10 +93,28 @@ export function MobileShell({ session }: { session: AuthSession }) {
       offlineQueueSyncing.current = true;
 
       try {
+        const networkState = await Network.getNetworkStateAsync();
+
+        if (networkState.isConnected !== true || networkState.isInternetReachable === false) {
+          return;
+        }
+
         const pending = await getOfflineQueue();
 
         if (pending.length) {
           await flushOfflineQueue(session.token);
+        }
+
+        if (!pendingConflictRecoveryComplete.current) {
+          const reports = await conflictApi.all(session.token);
+
+          for (const report of reports) {
+            if (report.status === 'PENDING_SYNC') {
+              await conflictApi.sync(session.token, report.reportId);
+            }
+          }
+
+          pendingConflictRecoveryComplete.current = true;
         }
       } catch (exception) {
         console.error('Unable to synchronize offline reports.', exception);

@@ -116,9 +116,14 @@ public class RiskAlertServiceImpl implements RiskAlertService {
                         ));
     }
 
-    @Transactional
     @Override
     public RiskAlert acceptAlert(String alertId) {
+        return acceptAlert(alertId, null);
+    }
+
+    @Transactional
+    @Override
+    public RiskAlert acceptAlert(String alertId, String responder) {
 
         RiskAlert alert =
                 riskAlertRepository.findByAlertId(alertId)
@@ -139,6 +144,9 @@ public class RiskAlertServiceImpl implements RiskAlertService {
         }
 
         alert.setStatus(AlertStatus.ACCEPTED);
+        alert.setAssignedResponder(responder == null || responder.isBlank()
+                ? null
+                : responder.trim());
 
         return riskAlertRepository.save(alert);
     }

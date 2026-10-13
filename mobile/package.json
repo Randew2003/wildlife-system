@@ -1,3 +1,4 @@
+
 {
   "name": "mobile",
   "main": "expo-router/entry",
@@ -13,7 +14,7 @@
     "expo-image": "~57.0.5",
     "expo-image-picker": "~57.0.20",
     "expo-linking": "~57.0.11",
-    "expo-location": "~57.0.20",
+    "expo-location": "~57.0.21",
     "expo-network": "~57.0.2",
     "expo-router": "~57.0.24",
     "expo-splash-screen": "~57.0.9",
@@ -50,3 +51,4 @@
   },
   "private": true
 }
+
