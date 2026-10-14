@@ -59,11 +59,11 @@ export function HomeScreen({ session, onNavigate }: HomeScreenProps) {
   const activeAlerts = alerts.data?.filter((alert) => alert.status !== 'RESOLVED').length ?? 0;
   const pendingIncidents = incidents.data?.filter((incident) => incident.status !== 'SYNCED').length ?? 0;
   const openConflicts = conflicts.data?.filter((report) => !['RESOLVED', 'CLOSED'].includes(report.status)).length ?? 0;
-  const alertFeed = [...(alerts.data ?? [])].sort(
-    (first, second) => new Date(second.detectedAt).getTime() - new Date(first.detectedAt).getTime(),
-  );
+  const alertFeed = [...(alerts.data ?? [])]
+    .filter((alert) => alert.status !== 'RESOLVED')
+    .sort((first, second) => new Date(second.detectedAt).getTime() - new Date(first.detectedAt).getTime());
   const refreshAlerts = alerts.refresh;
-  const latestAlert = alertFeed.find((alert) => alert.status !== 'RESOLVED') ?? alertFeed[0];
+  const latestAlert = alertFeed[0];
   const nextPatrol = patrols.data?.find((patrol) => patrol.status !== 'COMPLETED');
   const latestConflict = conflicts.data?.[0];
 

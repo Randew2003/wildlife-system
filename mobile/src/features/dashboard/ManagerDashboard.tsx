@@ -1,6 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import * as Location from 'expo-location';
+import { Animated, Image, Linking, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 
+import MapView, { Marker } from '@/components/MapView';
+import type { MapPressEvent } from '@/components/MapView.types';
 import {
   alertApi,
   animalApi,
@@ -59,6 +63,7 @@ import {
   ValidationBlock,
 } from '@/features/app/native-ui';
 import { sampleParkLocation } from '@/features/app/constants';
+import { dismissRiskAlert, getDismissedRiskAlerts } from '@/features/monitoring/alertDismissal';
 
 const managerHeroImage = require('@/assets/images/manager-hero.png');
 
@@ -181,6 +186,28 @@ function canNotifyConflictResponse(report: ConflictReport) {
   return report.status === 'ASSIGNED';
 }
 
+function BlinkingAlert({ children, active = true }: { children: ReactNode; active?: boolean }) {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!active) {
+      opacity.setValue(1);
+      return undefined;
+    }
+
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.25, duration: 650, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 650, useNativeDriver: true }),
+      ]),
+    );
+    animation.start();
+
+    return () => animation.stop();
+  }, [active, opacity]);
+
+  return <Animated.View style={{ opacity }}>{children}</Animated.View>;
+}
 
 export function ManagerDashboard({ session }: { session: AuthSession }) {
   const { width } = useWindowDimensions();
@@ -275,6 +302,7 @@ export function ManagerDashboard({ session }: { session: AuthSession }) {
   const [zoneLatitude, setZoneLatitude] = useState(String(sampleParkLocation.latitude));
   const [zoneLongitude, setZoneLongitude] = useState(String(sampleParkLocation.longitude));
   const [zoneRadius, setZoneRadius] = useState('500');
+  const [zoneMapVisible, setZoneMapVisible] = useState(false);
   const [zoneBusy, setZoneBusy] = useState(false);
   const [zoneErrors, setZoneErrors] = useState<FormErrors>({});
 
@@ -283,6 +311,7 @@ export function ManagerDashboard({ session }: { session: AuthSession }) {
   const [assigningConflictId, setAssigningConflictId] = useState<string | null>(null);
   const [busyRecord, setBusyRecord] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [dismissedAlertIds, setDismissedAlertIds] = useState<string[]>([]);
 
   const effectiveAssignRangerId = assignRangerId || rangers.data?.[0]?.rangerId || '';
   const effectiveAssignRouteId = assignRouteId || routes.data?.[0]?.routeId || '';
@@ -690,6 +719,31 @@ export function ManagerDashboard({ session }: { session: AuthSession }) {
     }
   };
 
+  const selectZoneLocation = (event: MapPressEvent) => {
+    setZoneLatitude(String(event.nativeEvent.coordinate.latitude));
+    setZoneLongitude(String(event.nativeEvent.coordinate.longitude));
+    setZoneErrors((current) => ({ ...current, latitude: '', longitude: '' }));
+  };
+
+  const useCurrentZoneLocation = async () => {
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+
+      if (!permission.granted) {
+        setNotice('Location permission was denied. Select the zone location on the map or enter coordinates.');
+        return;
+      }
+
+      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      setZoneLatitude(String(position.coords.latitude));
+      setZoneLongitude(String(position.coords.longitude));
+      setZoneErrors((current) => ({ ...current, latitude: '', longitude: '' }));
+      setZoneMapVisible(true);
+    } catch (exception) {
+      setNotice(exception instanceof Error ? exception.message : 'Unable to read the current location.');
+    }
+  };
+
   const retryIncidentSync = async (id: number) => {
     setBusyRecord(`incident-${id}`);
     setNotice(null);
@@ -706,13 +760,48 @@ export function ManagerDashboard({ session }: { session: AuthSession }) {
   };
 
   const openPatrols = patrols.data?.filter((patrol) => patrol.status !== 'COMPLETED') ?? [];
-  const openAlerts = alerts.data?.filter((alert) => alert.status !== 'RESOLVED') ?? [];
+  const notificationAlerts = [...(alerts.data ?? [])].sort(
+    (first, second) => Number(first.status === 'RESOLVED') - Number(second.status === 'RESOLVED')
+      || new Date(second.detectedAt).getTime() - new Date(first.detectedAt).getTime(),
+  );
+  const dashboardAlerts = notificationAlerts.filter((alert) => !dismissedAlertIds.includes(alert.alertId));
+  const openAlerts = dashboardAlerts.filter((alert) => alert.status !== 'RESOLVED');
   const openConflicts = conflicts.data?.filter((report) => !['RESOLVED', 'CLOSED'].includes(report.status)) ?? [];
   const pendingIncidents = incidents.data?.filter((incident) => incident.status !== 'SYNCED') ?? [];
-  const latestAlert = openAlerts[0] ?? alerts.data?.[0];
+  const latestAlert = openAlerts.find((alert) => alert.status === 'DETECTED') ?? openAlerts[0];
   const refreshAlerts = alerts.refresh;
   const refreshConflicts = conflicts.refresh;
   const refreshIncidents = incidents.refresh;
+
+  useEffect(() => {
+    getDismissedRiskAlerts(session.userId).then(setDismissedAlertIds).catch((exception) => {
+      console.error('Unable to load dismissed risk alerts.', exception);
+    });
+  }, [session.userId]);
+
+  const dismissAlert = async (alertId: string) => {
+    try {
+      await dismissRiskAlert(session.userId, alertId);
+      setDismissedAlertIds((current) => (current.includes(alertId) ? current : [...current, alertId]));
+    } catch (exception) {
+      setNotice(exception instanceof Error ? exception.message : 'Unable to reject this alert for your account.');
+    }
+  };
+
+  const openAlertRoute = async (alert: RiskAlert) => {
+    if (typeof alert.latitude !== 'number' || typeof alert.longitude !== 'number') {
+      setNotice('This alert does not have map coordinates.');
+      return;
+    }
+
+    try {
+      await Linking.openURL(
+        `https://www.google.com/maps/dir/?api=1&destination=${alert.latitude},${alert.longitude}&travelmode=driving`,
+      );
+    } catch (exception) {
+      setNotice(exception instanceof Error ? exception.message : 'Unable to open the route map.');
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -735,6 +824,7 @@ export function ManagerDashboard({ session }: { session: AuthSession }) {
   const renderOverview = () => (
     <Stack>
       {latestAlert ? (
+        <BlinkingAlert active={latestAlert.status !== 'RESOLVED'}>
         <NotificationCard
           title="Urgent animal movement"
           subtitle={`${latestAlert.animalName} entered ${latestAlert.riskZoneName ?? `Zone ${latestAlert.riskZoneId}`}`}
@@ -746,8 +836,15 @@ export function ManagerDashboard({ session }: { session: AuthSession }) {
             { label: 'Responder', value: latestAlert.assignedResponder ?? 'Waiting for acceptance' },
           ]}
           tone={latestAlert.status === 'RESOLVED' ? 'green' : 'red'}
-          actions={<Button label="Open Notifications" onPress={() => setActiveTab('alerts')} />}
+          actions={
+            <Row>
+              <Button label="Open Notifications" onPress={() => setActiveTab('alerts')} />
+              <Button label="Show route" onPress={() => openAlertRoute(latestAlert)} variant="secondary" />
+              <Button label="Reject for me" onPress={() => dismissAlert(latestAlert.alertId)} variant="danger" />
+            </Row>
+          }
         />
+        </BlinkingAlert>
       ) : null}
 
       <Row>
@@ -996,11 +1093,15 @@ export function ManagerDashboard({ session }: { session: AuthSession }) {
         />
         {alerts.loading ? <LoadingBlock label="Loading alerts" /> : null}
         {alerts.error ? <ErrorBlock message={alerts.error} onRetry={alerts.refresh} /> : null}
-        {!alerts.loading && !alerts.error && !alerts.data?.length ? <EmptyBlock title="No notifications" /> : null}
-        {alerts.data?.map((alert) => {
+        {!alerts.loading && !alerts.error && !notificationAlerts.length ? <EmptyBlock title="No notifications" /> : null}
+        {notificationAlerts.length ? (
+          <>
+            <SectionTitle title="Not resolved" subtitle="Active alerts appear first." />
+            {notificationAlerts.filter((alert) => alert.status !== 'RESOLVED').map((alert) => {
           const label = alertButtonLabel(alert);
 
           return (
+            <BlinkingAlert key={alert.alertId}>
             <NotificationCard
               key={alert.alertId}
               title={alert.status === 'RESOLVED' ? `${alert.animalName} alert resolved` : `Urgent: ${alert.animalName}`}
@@ -1013,18 +1114,37 @@ export function ManagerDashboard({ session }: { session: AuthSession }) {
               ]}
               tone={alert.status === 'RESOLVED' ? 'green' : alert.status === 'RESPONDING' ? 'amber' : 'red'}
               actions={
-                label ? (
+              <Row>
+                {label ? (
                   <Button
                     label={label}
                     onPress={() => updateAlert(alert)}
                     busy={busyRecord === alert.alertId}
                     variant={alert.status === 'DETECTED' ? 'primary' : 'secondary'}
                   />
-                ) : undefined
+                ) : null}
+                <Button label="Show route" onPress={() => openAlertRoute(alert)} variant="secondary" />
+                <Button label="Reject for me" onPress={() => dismissAlert(alert.alertId)} variant="danger" />
+              </Row>
               }
             />
+            </BlinkingAlert>
           );
         })}
+            <SectionTitle title="Resolved" />
+            {notificationAlerts.filter((alert) => alert.status === 'RESOLVED').map((alert) => (
+              <NotificationCard
+                key={alert.alertId}
+                title={`${alert.animalName} alert resolved`}
+                subtitle={locationSummary(alert.latitude, alert.longitude)}
+                status={alert.status}
+                time={formatDate(alert.detectedAt)}
+                detail={alert.riskZoneName ?? `Zone ${alert.riskZoneId}`}
+                tone="green"
+              />
+            ))}
+          </>
+        ) : null}
       </Stack>
     </Panel>
   );
@@ -1232,6 +1352,35 @@ export function ManagerDashboard({ session }: { session: AuthSession }) {
             <Field label="Latitude" value={zoneLatitude} onChangeText={setZoneLatitude} error={zoneErrors.latitude} keyboard="numeric" />
             <Field label="Longitude" value={zoneLongitude} onChangeText={setZoneLongitude} error={zoneErrors.longitude} keyboard="numeric" />
           </Row>
+          <Row>
+            <Button label="Choose on map" onPress={() => setZoneMapVisible((visible) => !visible)} variant="secondary" />
+            <Button label="Use current location" onPress={useCurrentZoneLocation} variant="secondary" />
+          </Row>
+          {zoneMapVisible ? (
+            <View className="overflow-hidden rounded-lg border border-slate-200">
+              <MapView
+                accessibilityLabel="Choose high-risk zone location"
+                initialRegion={{
+                  latitude: parseNumber(zoneLatitude) ?? sampleParkLocation.latitude,
+                  longitude: parseNumber(zoneLongitude) ?? sampleParkLocation.longitude,
+                  latitudeDelta: 0.02,
+                  longitudeDelta: 0.02,
+                }}
+                onPress={selectZoneLocation}
+                scrollEnabled
+                style={{ height: 240, width: '100%' }}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: parseNumber(zoneLatitude) ?? sampleParkLocation.latitude,
+                    longitude: parseNumber(zoneLongitude) ?? sampleParkLocation.longitude,
+                  }}
+                  title="High-risk zone center"
+                  description="Tap the map to move this location"
+                />
+              </MapView>
+            </View>
+          ) : null}
           <Field label="Radius meters" value={zoneRadius} onChangeText={setZoneRadius} error={zoneErrors.radius} keyboard="numeric" />
           <ValidationBlock errors={Object.values(zoneErrors)} />
           <Button label="Create Risk Zone" onPress={createZone} busy={zoneBusy} />
