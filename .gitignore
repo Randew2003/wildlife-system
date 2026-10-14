@@ -25,3 +25,4 @@ replay_pid*
 
 
 backend/src/main/resources/application-local.properties
+mobile/.env
