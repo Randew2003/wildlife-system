@@ -10,6 +10,8 @@ import com.wildlife.backend.repository.UserAccountRepository;
 import com.wildlife.backend.service.interfaces.ConflictReportService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.wildlife.backend.exception.ConflictReportNotFoundException;
+import com.wildlife.backend.exception.InvalidConflictReportStateException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -91,7 +93,7 @@ public class ConflictReportServiceImpl implements ConflictReportService {
         ConflictReport report = getReport(reportId);
 
         if (report.getStatus() != ConflictReportStatus.PENDING_SYNC) {
-            throw new IllegalStateException(
+            throw new InvalidConflictReportStateException(
                     "Only pending reports can be synchronized.");
         }
 
@@ -107,9 +109,8 @@ public class ConflictReportServiceImpl implements ConflictReportService {
 
     @Override
     public ConflictReport getReport(String reportId) {
-
         return conflictReportRepository.findByReportId(reportId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ConflictReportNotFoundException(
                         "Conflict report not found: " + reportId));
     }
 
@@ -154,10 +155,9 @@ public class ConflictReportServiceImpl implements ConflictReportService {
                 .findByEmailIgnoreCaseAndRoleAndEnabledTrue(
                         responderEmail,
                         UserRole.COMMUNITY_LIAISON_OFFICER)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Community liaison officer not found: "
-                                        + responderEmail));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Community liaison officer not found: "
+                                + responderEmail));
 
         report.setAssignedRanger(liaisonOfficer.getEmail());
         report.setStatus(ConflictReportStatus.ASSIGNED);
@@ -200,8 +200,7 @@ public class ConflictReportServiceImpl implements ConflictReportService {
         report.setResponseOutcome(
                 responseOutcome == null || responseOutcome.isBlank()
                         ? "SOLVED"
-                        : responseOutcome.trim()
-        );
+                        : responseOutcome.trim());
         report.setResolvedAt(LocalDateTime.now());
 
         return conflictReportRepository.save(report);
