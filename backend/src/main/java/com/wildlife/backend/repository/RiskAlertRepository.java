@@ -41,4 +41,7 @@ public interface RiskAlertRepository extends JpaRepository<RiskAlert, Long> {
             Long riskZoneId,
             List<AlertStatus> statuses
     );
+
+    @EntityGraph(attributePaths = {"animal", "location", "riskZone"})
+    List<RiskAlert> findByAnimalIdAndStatusIn(Long animalId, List<AlertStatus> statuses);
 }
