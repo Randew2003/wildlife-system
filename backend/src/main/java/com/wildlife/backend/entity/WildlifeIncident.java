@@ -1,10 +1,8 @@
 package com.wildlife.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -15,10 +13,24 @@ import java.util.List;
 @Table(name = "wildlife_incidents")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class WildlifeIncident {
+
+    public WildlifeIncident() {
+    }
+
+    public WildlifeIncident(Long id, IncidentType incidentType, Double latitude, Double longitude,
+                           String description, LocalDateTime reportedAt, IncidentStatus status,
+                           List<String> photoUrls) {
+        this.id = id;
+        this.incidentType = incidentType;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.description = description;
+        this.reportedAt = reportedAt;
+        this.status = status;
+        this.photoUrls = photoUrls;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

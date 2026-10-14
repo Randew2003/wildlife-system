@@ -7,7 +7,6 @@ import com.wildlife.backend.entity.WildlifeIncident;
 import com.wildlife.backend.exception.WildlifeIncidentNotFoundException;
 import com.wildlife.backend.repository.WildlifeIncidentRepository;
 import com.wildlife.backend.service.interfaces.WildlifeIncidentService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,11 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class WildlifeIncidentServiceImpl implements WildlifeIncidentService {
 
         private final WildlifeIncidentRepository wildlifeIncidentRepository;
+
+        public WildlifeIncidentServiceImpl(WildlifeIncidentRepository wildlifeIncidentRepository) {
+                this.wildlifeIncidentRepository = wildlifeIncidentRepository;
+        }
 
         @Override
         public WildlifeIncidentResponse createIncident(WildlifeIncidentRequest request) {

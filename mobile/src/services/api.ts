@@ -1,4 +1,6 @@
-import { Platform } from 'react-native';
+import { API_BASE_URL } from '@/config/environment';
+
+export { API_BASE_URL };
 
 import type {
   AlertStatus,
@@ -20,23 +22,6 @@ import type {
   WildlifeIncident,
   WildlifeIncidentPayload,
 } from '@/types/domain';
-
-declare const process:
-  | {
-      env?: Record<string, string | undefined>;
-    }
-  | undefined;
-
-const env = typeof process !== 'undefined' ? process.env : undefined;
-
-function normalizeBaseUrl(value: string) {
-  return value.trim().replace(/^https?:\/\/\s+/, (protocol) => protocol.trim());
-}
-
-export const API_BASE_URL = normalizeBaseUrl(
-  env?.EXPO_PUBLIC_API_BASE_URL ??
-    (Platform.OS === 'android' ? 'http://10.97.126.1:8080' : 'http://localhost:8080'),
-);
 
 export class ApiError extends Error {
   status: number;
