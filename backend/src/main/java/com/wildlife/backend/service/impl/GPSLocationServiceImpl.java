@@ -77,6 +77,8 @@ public class GPSLocationServiceImpl implements GPSLocationService {
                     "High-risk movement detected. Alert created: "
                             + alert.getAlertId()
             );
+        } else {
+            riskAlertService.resolveAlertsOutsideRiskZones(savedLocation);
         }
 
         return savedLocation;

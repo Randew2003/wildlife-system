@@ -13,6 +13,8 @@ public interface RiskAlertService {
             RiskZone riskZone
     );
 
+    void resolveAlertsOutsideRiskZones(GPSLocation location);
+
     List<RiskAlert> getAllAlerts();
 
     RiskAlert getAlert(String alertId);

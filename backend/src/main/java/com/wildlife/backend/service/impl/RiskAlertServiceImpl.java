@@ -99,6 +99,20 @@ public class RiskAlertServiceImpl implements RiskAlertService {
         return savedAlert;
     }
 
+    @Transactional
+    @Override
+    public void resolveAlertsOutsideRiskZones(GPSLocation location) {
+        List<AlertStatus> activeStatuses = List.of(
+                AlertStatus.DETECTED,
+                AlertStatus.ACCEPTED,
+                AlertStatus.RESPONDING
+        );
+
+        riskAlertRepository
+                .findByAnimalIdAndStatusIn(location.getAnimal().getId(), activeStatuses)
+                .forEach(alert -> alert.setStatus(AlertStatus.RESOLVED));
+    }
+
     @Override
     public List<RiskAlert> getAllAlerts() {
 
