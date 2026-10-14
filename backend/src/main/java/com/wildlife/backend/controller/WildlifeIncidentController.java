@@ -4,7 +4,6 @@ import com.wildlife.backend.dto.request.WildlifeIncidentRequest;
 import com.wildlife.backend.dto.response.WildlifeIncidentResponse;
 import com.wildlife.backend.service.interfaces.WildlifeIncidentService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,10 +12,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/incidents")
-@RequiredArgsConstructor
 public class WildlifeIncidentController {
 
     private final WildlifeIncidentService wildlifeIncidentService;
+
+    public WildlifeIncidentController(WildlifeIncidentService wildlifeIncidentService) {
+        this.wildlifeIncidentService = wildlifeIncidentService;
+    }
 
     @PostMapping
     public ResponseEntity<WildlifeIncidentResponse> createIncident(
